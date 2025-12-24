@@ -14,48 +14,43 @@ body { background: radial-gradient(circle at top, #1b5e20, #0b1f13); color:white
 @keyframes snow { to { transform: translateY(120vh); } }
 
 /* Screens */
-.screen { width:100%; max-width:1100px; max-height:100vh; padding:20px; background:rgba(0,0,0,0.45); border-radius:24px; box-shadow:0 0 40px rgba(255,0,0,0.35); text-align:center; overflow:hidden; display:flex; flex-direction:column; align-items:center; }
+.screen { width:100%; max-width:1100px; max-height:100vh; padding:10px 15px; background:rgba(0,0,0,0.45); border-radius:24px; box-shadow:0 0 40px rgba(255,0,0,0.35); text-align:center; overflow:hidden; display:flex; flex-direction:column; align-items:center; }
 .hidden { display:none; }
 h1 { margin-top:0; color:#ffeb3b; text-shadow:0 0 12px red; }
 
 /* Buttons */
-button { padding:12px 22px; margin:6px; border-radius:16px; border:none; background:#ff5252; color:white; cursor:pointer; box-shadow:0 0 12px red; }
+button { padding:10px 20px; margin:5px; border-radius:16px; border:none; background:#ff5252; color:white; cursor:pointer; box-shadow:0 0 12px red; }
 button:hover { background:#ff1744; }
 
 /* Scoreboard */
-.scoreboard { display:flex; gap:10px; margin:15px 0; flex-wrap:wrap; justify-content:center; width:100%; }
-.player { flex:1; min-width:120px; padding:8px; border-radius:14px; background:rgba(255,255,255,0.15); text-align:center; }
+.scoreboard { display:flex; gap:10px; margin:10px 0; flex-wrap:wrap; justify-content:center; width:100%; }
+.player { flex:1; min-width:120px; padding:6px; border-radius:14px; background:rgba(255,255,255,0.15); text-align:center; }
 .player.active { background: rgba(255,0,0,0.65); box-shadow:0 0 15px #ff5252; }
 
 /* Grid */
-.grid { display:grid; gap:10px; justify-content:center; flex:1; overflow:auto; }
+.grid { display:grid; gap:6px; justify-content:center; flex:1; }
 
 /* Card */
 .card { perspective:900px; cursor:pointer; }
 .card-inner { width:100%; height:100%; transition:transform 0.55s; transform-style:preserve-3d; position:relative; }
 .card.flip .card-inner { transform:rotateY(180deg); }
-.card-face { position:absolute; inset:0; backface-visibility:hidden; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:clamp(1.8rem,3vw,2.6rem); }
+.card-face { position:absolute; inset:0; backface-visibility:hidden; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:clamp(1.5rem,3vw,2.5rem); }
 .card-front { background:linear-gradient(145deg,#c62828,#8e0000); }
 .card-back { background:linear-gradient(145deg,#2e7d32,#1b5e20); transform:rotateY(180deg); }
 
 /* Winner */
-.rank { opacity:0; transform:translateY(20px); transition:all 0.6s ease; margin:10px 0; }
+.rank { opacity:0; transform:translateY(20px); transition:all 0.6s ease; margin:8px 0; }
 .rank.show { opacity:1; transform:translateY(0); }
 .rank.first { color:gold; font-size:1.4rem; }
 .rank.second { color:silver; }
 .rank.third { color:#cd7f32; }
 
 /* Confetti */
-.confetti { position:fixed; width:8px; height:14px; top:-20px; animation:fall linear forwards; }
+.confetti { position:fixed; width:6px; height:12px; top:-20px; animation:fall linear forwards; }
 @keyframes fall { to { transform: translateY(120vh) rotate(360deg); opacity:0; } }
 
 /* Back button always at top right */
-#backButton {
-  position: fixed;
-  top: 15px;
-  right: 15px;
-  z-index: 1000;
-}
+#backButton { position: fixed; top: 10px; right: 10px; z-index: 1000; }
 </style>
 </head>
 <body>
@@ -139,14 +134,15 @@ function createGrid(){
   const cols = config.cols;
   const rows = Math.ceil(totalCards/cols);
 
-  const screenPadding = 40;
-  const headerHeight = 170;
+  // Compute max card size for perfect fit
+  const screenPadding = 20;
+  const headerHeight = 140;
   const availableWidth = window.innerWidth - screenPadding;
-  const availableHeight = window.innerHeight - headerHeight - screenPadding;
-  const cardSize = Math.floor(Math.min(availableWidth/cols, availableHeight/rows) - 10);
+  const availableHeight = window.innerHeight - headerHeight;
+  const cardSize = Math.floor(Math.min(availableWidth/cols, availableHeight/rows));
 
   grid.style.gridTemplateColumns = `repeat(${cols}, ${cardSize}px)`;
-  grid.style.gap="10px"; grid.style.maxWidth=`${cols*cardSize}px`;
+  grid.style.gap="6px"; grid.style.maxWidth=`${cols*cardSize}px`;
 
   const deck = [...EMOJIS.slice(0, config.pairs), ...EMOJIS.slice(0, config.pairs)].sort(()=>Math.random()-0.5);
 
@@ -204,6 +200,9 @@ function confetti(){
 }
 
 function backToMenu(){ menu.classList.remove("hidden"); game.classList.add("hidden"); winner.classList.add("hidden"); backButton.classList.add("hidden"); }
+
+// Optional: resize grid dynamically on window resize
+window.addEventListener('resize', ()=>{ if(!game.classList.contains("hidden")) createGrid(); });
 </script>
 </body>
 </html>
