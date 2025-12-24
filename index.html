@@ -2,59 +2,74 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Christmas Flip & Match</title>
 
 <style>
-* { box-sizing: border-box; font-family: "Segoe UI", sans-serif; }
+* {
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
 
-body {
+html, body {
   margin: 0;
-  min-height: 100vh;
-  background: radial-gradient(circle at top, #1b5e20, #0d2818);
-  color: #fff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  padding: 0;
+  height: 100%;
   overflow: hidden;
 }
 
-/* Snow */
+body {
+  background: radial-gradient(circle at top, #1b5e20, #0b1f13);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Snow overlay */
 .snow::before {
-  content: "❄ ❅ ❆ ❄ ❅ ❆";
-  position: absolute;
+  content: "❄ ❅ ❆ ❄ ❅ ❆ ❄ ❅ ❆";
+  position: fixed;
   top: -10%;
-  left: 0;
   width: 100%;
   font-size: 2rem;
   opacity: 0.25;
-  animation: snow 14s linear infinite;
+  animation: snow 16s linear infinite;
 }
-@keyframes snow { to { transform: translateY(120vh); } }
+@keyframes snow {
+  to { transform: translateY(120vh); }
+}
 
+/* Screens */
 .screen {
+  width: 100%;
+  max-width: 1100px;
+  max-height: 100vh;
+  padding: 20px;
   background: rgba(0,0,0,0.45);
-  padding: 30px 40px;
-  border-radius: 22px;
-  box-shadow: 0 0 35px rgba(255,0,0,0.35);
+  border-radius: 24px;
+  box-shadow: 0 0 40px rgba(255,0,0,0.35);
   text-align: center;
+  overflow-y: auto;
 }
 
 .hidden { display: none; }
 
 h1 {
-  margin: 0;
+  margin-top: 0;
   color: #ffeb3b;
   text-shadow: 0 0 12px red;
 }
 
+/* Buttons */
 button {
-  padding: 12px 26px;
+  padding: 12px 22px;
+  margin: 6px;
   border-radius: 16px;
   border: none;
   background: #ff5252;
   color: white;
   cursor: pointer;
-  margin: 8px;
   box-shadow: 0 0 12px red;
 }
 button:hover { background: #ff1744; }
@@ -62,13 +77,14 @@ button:hover { background: #ff1744; }
 /* Scoreboard */
 .scoreboard {
   display: flex;
-  gap: 12px;
-  margin: 20px 0;
+  gap: 10px;
+  margin: 15px 0;
+  flex-wrap: wrap;
 }
-
 .player {
   flex: 1;
-  padding: 10px;
+  min-width: 130px;
+  padding: 8px;
   border-radius: 14px;
   background: rgba(255,255,255,0.15);
 }
@@ -80,43 +96,47 @@ button:hover { background: #ff1744; }
 /* Grid */
 .grid {
   display: grid;
-  gap: 14px;
+  gap: 10px;
   justify-content: center;
-  margin: 20px 0;
+  margin: 10px auto;
 }
 
+/* Card */
 .card {
-  width: 90px;
-  height: 110px;
-  perspective: 800px;
+  aspect-ratio: 2 / 2.5;
+  perspective: 900px;
   cursor: pointer;
 }
 
 .card-inner {
   width: 100%;
   height: 100%;
-  transition: transform 0.6s;
+  transition: transform 0.55s;
   transform-style: preserve-3d;
   position: relative;
 }
 
-.card.flip .card-inner { transform: rotateY(180deg); }
+.card.flip .card-inner {
+  transform: rotateY(180deg);
+}
 
 .card-face {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   backface-visibility: hidden;
-  border-radius: 15px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.4rem;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
 }
 
-.card-front { background: linear-gradient(145deg,#c62828,#8e0000); }
+.card-front {
+  background: linear-gradient(145deg, #c62828, #8e0000);
+}
+
 .card-back {
-  background: linear-gradient(145deg,#2e7d32,#1b5e20);
+  background: linear-gradient(145deg, #2e7d32, #1b5e20);
   transform: rotateY(180deg);
 }
 
@@ -157,16 +177,18 @@ button:hover { background: #ff1744; }
   <h1>🎄 Christmas Flip & Match 🎄</h1>
 
   <h3>Players</h3>
-  <button onclick="setPlayers(2)">2 Players</button>
-  <button onclick="setPlayers(3)">3 Players</button>
+  <button onclick="players=2">2 Players</button>
+  <button onclick="players=3">3 Players</button>
 
   <h3>Difficulty</h3>
-  <button onclick="setDifficulty('easy')">🟢 Easy</button>
-  <button onclick="setDifficulty('medium')">🟡 Medium</button>
-  <button onclick="setDifficulty('hard')">🔴 Hard</button>
+  <button onclick="setDifficulty('easy')">Easy</button>
+  <button onclick="setDifficulty('medium')">Medium</button>
+  <button onclick="setDifficulty('hard')">Hard</button>
+  <button onclick="setDifficulty('super')">🔥 Super Hard</button>
+  <button onclick="setDifficulty('insane')">😈 Insane</button>
 
   <br><br>
-  <button onclick="startGame()">Start Game 🎁</button>
+  <button onclick="startGame()">Start Game</button>
 </div>
 
 <!-- GAME -->
@@ -181,11 +203,11 @@ button:hover { background: #ff1744; }
 <div class="screen hidden" id="winner">
   <h2>🏆 Final Results</h2>
   <div id="results"></div>
-  <button onclick="backToMenu()">Play Again 🎁</button>
+  <button onclick="backToMenu()">Play Again</button>
 </div>
 
 <script>
-const ALL_EMOJIS = ["🎄","🎁","⭐","⛄","🔔","🍪","🕯️","🦌","❄️","🎅","🎀","🍭","🧦","🌟","🛷"];
+const EMOJIS = ["🎄","🎁","⭐","⛄","🔔","🍪","🕯️","🦌","❄️","🎅","🎀","🍭","🧦","🌟","🛷","🥶","🎶","🔥","🧣","☃️","🍬"];
 
 let players = 2;
 let difficulty = "easy";
@@ -194,7 +216,8 @@ let currentPlayer = 0;
 let flipped = [];
 let lock = false;
 let matches = 0;
-let gridConfig = {};
+
+let config = {};
 let flipDelay = 900;
 
 const menu = document.getElementById("menu");
@@ -204,22 +227,14 @@ const grid = document.getElementById("grid");
 const scoreboard = document.getElementById("scoreboard");
 const results = document.getElementById("results");
 
-function setPlayers(n){ players = n; }
 function setDifficulty(d){ difficulty = d; }
 
 function startGame(){
-  if (difficulty === "easy") {
-    gridConfig = { cols: 4, pairs: 8 };
-    flipDelay = 1100;
-  }
-  if (difficulty === "medium") {
-    gridConfig = { cols: 4, pairs: 10 };
-    flipDelay = 900;
-  }
-  if (difficulty === "hard") {
-    gridConfig = { cols: 6, pairs: 15 };
-    flipDelay = 700;
-  }
+  if(difficulty==="easy"){ config={cols:4,pairs:8}; flipDelay=1200; }
+  if(difficulty==="medium"){ config={cols:5,pairs:10}; flipDelay=900; }
+  if(difficulty==="hard"){ config={cols:6,pairs:15}; flipDelay=700; }
+  if(difficulty==="super"){ config={cols:6,pairs:18}; flipDelay=500; }
+  if(difficulty==="insane"){ config={cols:7,pairs:21}; flipDelay=350; }
 
   scores = Array(players).fill(0);
   currentPlayer = 0;
@@ -231,29 +246,33 @@ function startGame(){
   game.classList.remove("hidden");
 
   createScoreboard();
-  createBoard();
+  createGrid();
 }
 
 function createScoreboard(){
-  scoreboard.innerHTML = "";
+  scoreboard.innerHTML="";
   for(let i=0;i<players;i++){
-    const p=document.createElement("div");
-    p.className="player"+(i===0?" active":"");
-    p.innerHTML=`Player ${i+1}: <span>0</span>`;
-    scoreboard.appendChild(p);
+    const d=document.createElement("div");
+    d.className="player"+(i===0?" active":"");
+    d.innerHTML=`Player ${i+1}: <span>0</span>`;
+    scoreboard.appendChild(d);
   }
 }
 
-function createBoard(){
+function createGrid(){
   grid.innerHTML="";
-  grid.style.gridTemplateColumns = `repeat(${gridConfig.cols}, 90px)`;
+  grid.style.gridTemplateColumns = `repeat(${config.cols}, minmax(60px, 1fr))`;
 
-  const emojis = ALL_EMOJIS.slice(0, gridConfig.pairs);
-  const cards = [...emojis, ...emojis].sort(()=>Math.random()-0.5);
+  const size = Math.min(window.innerWidth, 1000) / config.cols - 14;
+  grid.style.maxWidth = `${size*config.cols}px`;
 
-  cards.forEach(e=>{
+  const deck=[...EMOJIS.slice(0,config.pairs),...EMOJIS.slice(0,config.pairs)]
+    .sort(()=>Math.random()-0.5);
+
+  deck.forEach(e=>{
     const c=document.createElement("div");
     c.className="card";
+    c.style.width = `${size}px`;
     c.innerHTML=`
       <div class="card-inner">
         <div class="card-face card-front">❄</div>
@@ -274,14 +293,13 @@ function flipCard(card,emoji){
 function checkMatch(){
   lock=true;
   const[a,b]=flipped;
-
   if(a.emoji===b.emoji){
     scores[currentPlayer]++;
     updateScores();
     matches++;
     flipped=[];
     lock=false;
-    if(matches===gridConfig.pairs)showResults();
+    if(matches===config.pairs)showResults();
   } else {
     setTimeout(()=>{
       a.card.classList.remove("flip");
@@ -289,7 +307,7 @@ function checkMatch(){
       flipped=[];
       nextPlayer();
       lock=false;
-    }, flipDelay);
+    },flipDelay);
   }
 }
 
@@ -310,22 +328,21 @@ function showResults(){
   winner.classList.remove("hidden");
   results.innerHTML="";
 
-  scores
-    .map((s,i)=>({p:i+1,s}))
+  scores.map((s,i)=>({p:i+1,s}))
     .sort((a,b)=>b.s-a.s)
     .forEach((r,i)=>{
       const d=document.createElement("div");
       d.className=`rank ${i===0?"first":i===1?"second":"third"}`;
       d.textContent=`${i===0?"🥇":i===1?"🥈":"🥉"} Player ${r.p} — ${r.s} pts`;
       results.appendChild(d);
-      setTimeout(()=>d.classList.add("show"), i*400);
+      setTimeout(()=>d.classList.add("show"),i*400);
     });
 
-  launchConfetti();
+  confetti();
 }
 
-function launchConfetti(){
-  for(let i=0;i<120;i++){
+function confetti(){
+  for(let i=0;i<140;i++){
     const c=document.createElement("div");
     c.className="confetti";
     c.style.left=Math.random()*100+"vw";
