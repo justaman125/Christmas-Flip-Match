@@ -31,7 +31,6 @@ body {
 }
 @keyframes snow { to { transform: translateY(120vh); } }
 
-/* Containers */
 .screen {
   background: rgba(0,0,0,0.45);
   padding: 30px 40px;
@@ -55,13 +54,12 @@ button {
   background: #ff5252;
   color: white;
   cursor: pointer;
-  font-size: 1rem;
-  margin: 10px;
+  margin: 8px;
   box-shadow: 0 0 12px red;
 }
 button:hover { background: #ff1744; }
 
-/* Game */
+/* Scoreboard */
 .scoreboard {
   display: flex;
   gap: 12px;
@@ -74,16 +72,15 @@ button:hover { background: #ff1744; }
   border-radius: 14px;
   background: rgba(255,255,255,0.15);
 }
-
 .player.active {
   background: rgba(255,0,0,0.65);
   box-shadow: 0 0 15px #ff5252;
 }
 
+/* Grid */
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, 90px);
-  gap: 15px;
+  gap: 14px;
   justify-content: center;
   margin: 20px 0;
 }
@@ -114,7 +111,7 @@ button:hover { background: #ff1744; }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.6rem;
+  font-size: 2.4rem;
 }
 
 .card-front { background: linear-gradient(145deg,#c62828,#8e0000); }
@@ -124,13 +121,6 @@ button:hover { background: #ff1744; }
 }
 
 /* Winner */
-.winner-box {
-  background: #1b5e20;
-  padding: 35px;
-  border-radius: 22px;
-  box-shadow: 0 0 35px gold;
-}
-
 .rank {
   opacity: 0;
   transform: translateY(20px);
@@ -147,11 +137,9 @@ button:hover { background: #ff1744; }
   position: fixed;
   width: 8px;
   height: 14px;
-  background: red;
   top: -20px;
   animation: fall linear forwards;
 }
-
 @keyframes fall {
   to {
     transform: translateY(120vh) rotate(360deg);
@@ -164,172 +152,194 @@ button:hover { background: #ff1744; }
 <body>
 <div class="snow"></div>
 
-<!-- Player Select Screen -->
-<div class="screen" id="menuScreen">
+<!-- MENU -->
+<div class="screen" id="menu">
   <h1>🎄 Christmas Flip & Match 🎄</h1>
-  <h3>Select Players</h3>
-  <button onclick="startGame(2)">👥 2 Players</button>
-  <button onclick="startGame(3)">👥 3 Players</button>
+
+  <h3>Players</h3>
+  <button onclick="setPlayers(2)">2 Players</button>
+  <button onclick="setPlayers(3)">3 Players</button>
+
+  <h3>Difficulty</h3>
+  <button onclick="setDifficulty('easy')">🟢 Easy</button>
+  <button onclick="setDifficulty('medium')">🟡 Medium</button>
+  <button onclick="setDifficulty('hard')">🔴 Hard</button>
+
+  <br><br>
+  <button onclick="startGame()">Start Game 🎁</button>
 </div>
 
-<!-- Game Screen -->
-<div class="screen hidden" id="gameScreen">
+<!-- GAME -->
+<div class="screen hidden" id="game">
   <h1>🎄 Christmas Flip & Match 🎄</h1>
   <div class="scoreboard" id="scoreboard"></div>
   <div class="grid" id="grid"></div>
-  <button onclick="resetToMenu()">Back to Menu</button>
+  <button onclick="backToMenu()">Back to Menu</button>
 </div>
 
-<!-- Winner Screen -->
-<div class="screen hidden" id="winnerScreen">
-  <div class="winner-box">
-    <h2>🏆 Final Results</h2>
-    <div id="results"></div>
-    <button onclick="resetToMenu()">Play Again 🎁</button>
-  </div>
+<!-- WINNER -->
+<div class="screen hidden" id="winner">
+  <h2>🏆 Final Results</h2>
+  <div id="results"></div>
+  <button onclick="backToMenu()">Play Again 🎁</button>
 </div>
 
 <script>
-const emojis = ["🎄","🎁","⭐","⛄","🔔","🍪","🕯️","🦌"];
+const ALL_EMOJIS = ["🎄","🎁","⭐","⛄","🔔","🍪","🕯️","🦌","❄️","🎅","🎀","🍭","🧦","🌟","🛷"];
 
-let NUM_PLAYERS = 2;
+let players = 2;
+let difficulty = "easy";
 let scores = [];
 let currentPlayer = 0;
 let flipped = [];
 let lock = false;
 let matches = 0;
+let gridConfig = {};
+let flipDelay = 900;
 
-const menuScreen = document.getElementById("menuScreen");
-const gameScreen = document.getElementById("gameScreen");
-const winnerScreen = document.getElementById("winnerScreen");
+const menu = document.getElementById("menu");
+const game = document.getElementById("game");
+const winner = document.getElementById("winner");
 const grid = document.getElementById("grid");
 const scoreboard = document.getElementById("scoreboard");
 const results = document.getElementById("results");
 
-function shuffle(a){ return a.sort(()=>Math.random()-0.5); }
+function setPlayers(n){ players = n; }
+function setDifficulty(d){ difficulty = d; }
 
-function startGame(players) {
-  NUM_PLAYERS = players;
-  scores = Array(NUM_PLAYERS).fill(0);
+function startGame(){
+  if (difficulty === "easy") {
+    gridConfig = { cols: 4, pairs: 8 };
+    flipDelay = 1100;
+  }
+  if (difficulty === "medium") {
+    gridConfig = { cols: 4, pairs: 10 };
+    flipDelay = 900;
+  }
+  if (difficulty === "hard") {
+    gridConfig = { cols: 6, pairs: 15 };
+    flipDelay = 700;
+  }
+
+  scores = Array(players).fill(0);
   currentPlayer = 0;
   matches = 0;
   flipped = [];
 
-  menuScreen.classList.add("hidden");
-  winnerScreen.classList.add("hidden");
-  gameScreen.classList.remove("hidden");
+  menu.classList.add("hidden");
+  winner.classList.add("hidden");
+  game.classList.remove("hidden");
 
   createScoreboard();
   createBoard();
 }
 
-function createScoreboard() {
+function createScoreboard(){
   scoreboard.innerHTML = "";
-  for (let i = 0; i < NUM_PLAYERS; i++) {
-    const p = document.createElement("div");
-    p.className = "player" + (i === 0 ? " active" : "");
-    p.innerHTML = `Player ${i+1}: <span>0</span>`;
+  for(let i=0;i<players;i++){
+    const p=document.createElement("div");
+    p.className="player"+(i===0?" active":"");
+    p.innerHTML=`Player ${i+1}: <span>0</span>`;
     scoreboard.appendChild(p);
   }
 }
 
-function createBoard() {
-  grid.innerHTML = "";
-  lock = false;
+function createBoard(){
+  grid.innerHTML="";
+  grid.style.gridTemplateColumns = `repeat(${gridConfig.cols}, 90px)`;
 
-  const cards = shuffle([...emojis, ...emojis]);
-  cards.forEach(e => {
-    const c = document.createElement("div");
-    c.className = "card";
-    c.innerHTML = `
+  const emojis = ALL_EMOJIS.slice(0, gridConfig.pairs);
+  const cards = [...emojis, ...emojis].sort(()=>Math.random()-0.5);
+
+  cards.forEach(e=>{
+    const c=document.createElement("div");
+    c.className="card";
+    c.innerHTML=`
       <div class="card-inner">
         <div class="card-face card-front">❄</div>
         <div class="card-face card-back">${e}</div>
       </div>`;
-    c.onclick = () => flip(c, e);
+    c.onclick=()=>flipCard(c,e);
     grid.appendChild(c);
   });
 }
 
-function flip(card, emoji) {
-  if (lock || card.classList.contains("flip")) return;
+function flipCard(card,emoji){
+  if(lock||card.classList.contains("flip"))return;
   card.classList.add("flip");
-  flipped.push({ card, emoji });
-  if (flipped.length === 2) check();
+  flipped.push({card,emoji});
+  if(flipped.length===2)checkMatch();
 }
 
-function check() {
-  lock = true;
-  const [a, b] = flipped;
+function checkMatch(){
+  lock=true;
+  const[a,b]=flipped;
 
-  if (a.emoji === b.emoji) {
+  if(a.emoji===b.emoji){
     scores[currentPlayer]++;
     updateScores();
     matches++;
-    flipped = [];
-    lock = false;
-
-    if (matches === emojis.length) showResults();
+    flipped=[];
+    lock=false;
+    if(matches===gridConfig.pairs)showResults();
   } else {
-    setTimeout(() => {
+    setTimeout(()=>{
       a.card.classList.remove("flip");
       b.card.classList.remove("flip");
-      flipped = [];
+      flipped=[];
       nextPlayer();
-      lock = false;
-    }, 900);
+      lock=false;
+    }, flipDelay);
   }
 }
 
-function nextPlayer() {
-  const players = document.querySelectorAll(".player");
-  players[currentPlayer].classList.remove("active");
-  currentPlayer = (currentPlayer + 1) % NUM_PLAYERS;
-  players[currentPlayer].classList.add("active");
+function nextPlayer(){
+  const ps=document.querySelectorAll(".player");
+  ps[currentPlayer].classList.remove("active");
+  currentPlayer=(currentPlayer+1)%players;
+  ps[currentPlayer].classList.add("active");
 }
 
-function updateScores() {
+function updateScores(){
   document.querySelectorAll(".player span")
-    .forEach((s, i) => s.textContent = scores[i]);
+    .forEach((s,i)=>s.textContent=scores[i]);
 }
 
-function showResults() {
-  gameScreen.classList.add("hidden");
-  winnerScreen.classList.remove("hidden");
+function showResults(){
+  game.classList.add("hidden");
+  winner.classList.remove("hidden");
+  results.innerHTML="";
 
-  results.innerHTML = "";
-
-  const ranking = scores
-    .map((s,i)=>({player:i+1,score:s}))
-    .sort((a,b)=>b.score-a.score);
-
-  ranking.forEach((r,i)=>{
-    const div=document.createElement("div");
-    div.className=`rank ${i===0?"first":i===1?"second":"third"}`;
-    div.textContent=`${i===0?"🥇":i===1?"🥈":"🥉"} Player ${r.player} — ${r.score} pts`;
-    results.appendChild(div);
-    setTimeout(()=>div.classList.add("show"), i*400);
-  });
+  scores
+    .map((s,i)=>({p:i+1,s}))
+    .sort((a,b)=>b.s-a.s)
+    .forEach((r,i)=>{
+      const d=document.createElement("div");
+      d.className=`rank ${i===0?"first":i===1?"second":"third"}`;
+      d.textContent=`${i===0?"🥇":i===1?"🥈":"🥉"} Player ${r.p} — ${r.s} pts`;
+      results.appendChild(d);
+      setTimeout(()=>d.classList.add("show"), i*400);
+    });
 
   launchConfetti();
 }
 
-function launchConfetti() {
-  for (let i = 0; i < 120; i++) {
-    const c = document.createElement("div");
-    c.className = "confetti";
-    c.style.left = Math.random() * 100 + "vw";
-    c.style.background = ["red","gold","green","white"][Math.floor(Math.random()*4)];
-    c.style.animationDuration = 2 + Math.random() * 2 + "s";
+function launchConfetti(){
+  for(let i=0;i<120;i++){
+    const c=document.createElement("div");
+    c.className="confetti";
+    c.style.left=Math.random()*100+"vw";
+    c.style.background=["red","gold","green","white"][Math.floor(Math.random()*4)];
+    c.style.animationDuration=2+Math.random()*2+"s";
     document.body.appendChild(c);
-    setTimeout(() => c.remove(), 4000);
+    setTimeout(()=>c.remove(),4000);
   }
 }
 
-function resetToMenu() {
-  menuScreen.classList.remove("hidden");
-  gameScreen.classList.add("hidden");
-  winnerScreen.classList.add("hidden");
+function backToMenu(){
+  menu.classList.remove("hidden");
+  game.classList.add("hidden");
+  winner.classList.add("hidden");
 }
 </script>
 </body>
