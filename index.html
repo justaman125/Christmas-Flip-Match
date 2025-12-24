@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Christmas Memory Match — 3 Player Edition</title>
+<title>Christmas Flip & Match</title>
 
 <style>
 * {
@@ -21,7 +21,7 @@ body {
   overflow: hidden;
 }
 
-/* Snow effect */
+/* Snow */
 .snow::before {
   content: "❄ ❅ ❆ ❄ ❅ ❆";
   position: absolute;
@@ -34,16 +34,14 @@ body {
 }
 
 @keyframes snow {
-  to {
-    transform: translateY(120vh);
-  }
+  to { transform: translateY(120vh); }
 }
 
 .game-container {
-  background: rgba(0, 0, 0, 0.45);
-  padding: 25px 35px 30px;
+  background: rgba(0,0,0,0.45);
+  padding: 25px 35px;
   border-radius: 22px;
-  box-shadow: 0 0 35px rgba(255, 0, 0, 0.35);
+  box-shadow: 0 0 35px rgba(255,0,0,0.35);
   text-align: center;
   z-index: 1;
 }
@@ -56,20 +54,19 @@ h1 {
 
 .scoreboard {
   display: flex;
-  justify-content: space-between;
-  margin: 20px 0;
   gap: 10px;
+  margin: 20px 0;
 }
 
 .player {
-  padding: 10px 15px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.15);
   flex: 1;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.15);
 }
 
 .player.active {
-  background: rgba(255, 0, 0, 0.65);
+  background: rgba(255,0,0,0.65);
   box-shadow: 0 0 15px #ff5252;
 }
 
@@ -91,9 +88,9 @@ h1 {
 .card-inner {
   width: 100%;
   height: 100%;
-  position: relative;
   transition: transform 0.6s;
   transform-style: preserve-3d;
+  position: relative;
 }
 
 .card.flip .card-inner {
@@ -113,24 +110,20 @@ h1 {
 }
 
 .card-front {
-  background: linear-gradient(145deg, #c62828, #8e0000);
-  box-shadow: inset 0 0 10px rgba(255,255,255,0.35);
+  background: linear-gradient(145deg,#c62828,#8e0000);
 }
 
 .card-back {
-  background: linear-gradient(145deg, #2e7d32, #1b5e20);
+  background: linear-gradient(145deg,#2e7d32,#1b5e20);
   transform: rotateY(180deg);
-  box-shadow: 0 0 12px rgba(0,0,0,0.6);
 }
 
 button {
-  margin-top: 10px;
   padding: 10px 22px;
-  border: none;
   border-radius: 14px;
+  border: none;
   background: #ff5252;
   color: white;
-  font-size: 1rem;
   cursor: pointer;
   box-shadow: 0 0 12px red;
 }
@@ -139,174 +132,182 @@ button:hover {
   background: #ff1744;
 }
 
+/* Winner Screen */
 .winner-screen {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0,0,0,0.85);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.hidden {
-  display: none;
-}
+.hidden { display: none; }
 
 .winner-box {
   background: #1b5e20;
-  padding: 40px;
+  padding: 35px;
   border-radius: 22px;
   box-shadow: 0 0 35px gold;
   text-align: center;
+  min-width: 280px;
 }
+
+.podium {
+  margin: 20px 0;
+}
+
+.rank {
+  opacity: 0;
+  transform: translateY(20px) scale(0.9);
+  transition: all 0.6s ease;
+  margin: 8px 0;
+  font-size: 1.1rem;
+}
+
+.rank.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.rank.first { color: gold; font-size: 1.4rem; }
+.rank.second { color: silver; }
+.rank.third { color: #cd7f32; }
 </style>
 </head>
 
 <body>
-
 <div class="snow"></div>
 
 <div class="game-container">
-  <h1>🎄 Christmas Memory Match 🎄</h1>
+  <h1>🎄 Christmas Flip & Match 🎄</h1>
   <h2>3 Player Edition</h2>
 
   <div class="scoreboard">
-    <div class="player active" id="player-0">Player 1: <span>0</span></div>
-    <div class="player" id="player-1">Player 2: <span>0</span></div>
-    <div class="player" id="player-2">Player 3: <span>0</span></div>
+    <div class="player active">Player 1: <span>0</span></div>
+    <div class="player">Player 2: <span>0</span></div>
+    <div class="player">Player 3: <span>0</span></div>
   </div>
 
-  <div class="grid" id="gameGrid"></div>
-
-  <button id="restartBtn">🎅 Restart Game</button>
+  <div class="grid" id="grid"></div>
+  <button onclick="restartGame()">Restart</button>
 </div>
 
 <div class="winner-screen hidden" id="winnerScreen">
   <div class="winner-box">
-    <h2 id="winnerText"></h2>
+    <h2>🏆 Final Results</h2>
+    <div class="podium">
+      <div class="rank first" id="rank1">🥇</div>
+      <div class="rank second" id="rank2">🥈</div>
+      <div class="rank third" id="rank3">🥉</div>
+    </div>
     <button onclick="restartGame()">Play Again 🎁</button>
   </div>
 </div>
 
 <script>
-const grid = document.getElementById("gameGrid");
-const players = document.querySelectorAll(".player");
-const restartBtn = document.getElementById("restartBtn");
+const grid = document.getElementById("grid");
+const playersUI = document.querySelectorAll(".player");
 const winnerScreen = document.getElementById("winnerScreen");
-const winnerText = document.getElementById("winnerText");
 
-const emojis = ["🎄", "🎁", "⭐", "⛄", "🔔", "🍪", "🕯️", "🦌"];
-let cards = [];
-let flippedCards = [];
-let lockBoard = false;
+const emojis = ["🎄","🎁","⭐","⛄","🔔","🍪","🕯️","🦌"];
+let cards, flipped = [], lock = false;
+let scores = [0,0,0];
+let player = 0;
+let matches = 0;
 
-let currentPlayer = 0;
-let scores = [0, 0, 0];
-let matchedPairs = 0;
+function shuffle(a){ return a.sort(()=>Math.random()-0.5); }
 
-function shuffle(array) {
-  return array.sort(() => Math.random() - 0.5);
-}
+function createBoard(){
+  grid.innerHTML="";
+  cards = shuffle([...emojis,...emojis]);
+  matches = 0;
+  flipped = [];
+  lock = false;
 
-function createBoard() {
-  grid.innerHTML = "";
-  matchedPairs = 0;
-  flippedCards = [];
-  lockBoard = false;
-
-  cards = shuffle([...emojis, ...emojis]);
-
-  cards.forEach(emoji => {
-    const card = document.createElement("div");
-    card.className = "card";
-
-    card.innerHTML = `
-      <div class="card-inner">
-        <div class="card-face card-front">❄</div>
-        <div class="card-face card-back">${emoji}</div>
-      </div>
-    `;
-
-    card.addEventListener("click", () => flipCard(card, emoji));
-    grid.appendChild(card);
+  cards.forEach(e=>{
+    const c=document.createElement("div");
+    c.className="card";
+    c.innerHTML=`<div class="card-inner">
+      <div class="card-face card-front">❄</div>
+      <div class="card-face card-back">${e}</div>
+    </div>`;
+    c.onclick=()=>flip(c,e);
+    grid.appendChild(c);
   });
 }
 
-function flipCard(card, emoji) {
-  if (lockBoard || card.classList.contains("flip")) return;
-
+function flip(card,emoji){
+  if(lock||card.classList.contains("flip"))return;
   card.classList.add("flip");
-  flippedCards.push({ card, emoji });
-
-  if (flippedCards.length === 2) {
-    checkMatch();
-  }
+  flipped.push({card,emoji});
+  if(flipped.length===2)check();
 }
 
-function checkMatch() {
-  lockBoard = true;
-  const [first, second] = flippedCards;
-
-  if (first.emoji === second.emoji) {
-    scores[currentPlayer]++;
+function check(){
+  lock=true;
+  const [a,b]=flipped;
+  if(a.emoji===b.emoji){
+    scores[player]++;
     updateScores();
-    matchedPairs++;
-    flippedCards = [];
-    lockBoard = false;
-
-    if (matchedPairs === emojis.length) {
-      showWinner();
-    }
+    matches++;
+    flipped=[];
+    lock=false;
+    if(matches===emojis.length)showResults();
   } else {
-    setTimeout(() => {
-      first.card.classList.remove("flip");
-      second.card.classList.remove("flip");
-      flippedCards = [];
+    setTimeout(()=>{
+      a.card.classList.remove("flip");
+      b.card.classList.remove("flip");
+      flipped=[];
       nextPlayer();
-      lockBoard = false;
-    }, 1000);
+      lock=false;
+    },900);
   }
 }
 
-function nextPlayer() {
-  players[currentPlayer].classList.remove("active");
-  currentPlayer = (currentPlayer + 1) % 3;
-  players[currentPlayer].classList.add("active");
+function nextPlayer(){
+  playersUI[player].classList.remove("active");
+  player=(player+1)%3;
+  playersUI[player].classList.add("active");
 }
 
-function updateScores() {
-  players.forEach((p, i) => {
-    p.querySelector("span").textContent = scores[i];
-  });
+function updateScores(){
+  playersUI.forEach((p,i)=>p.querySelector("span").textContent=scores[i]);
 }
 
-function showWinner() {
-  const maxScore = Math.max(...scores);
-  const winners = scores
-    .map((s, i) => (s === maxScore ? `Player ${i + 1}` : null))
-    .filter(Boolean);
-
-  winnerText.textContent =
-    winners.length > 1
-      ? `🎉 It's a Tie! (${winners.join(", ")})`
-      : `🎉 ${winners[0]} Wins!`;
-
+function showResults(){
   winnerScreen.classList.remove("hidden");
+
+  const ranking = scores
+    .map((s,i)=>({player:i+1,score:s}))
+    .sort((a,b)=>b.score-a.score);
+
+  const r1=document.getElementById("rank1");
+  const r2=document.getElementById("rank2");
+  const r3=document.getElementById("rank3");
+
+  r1.textContent=`🥇 Player ${ranking[0].player} — ${ranking[0].score} pts`;
+  r2.textContent=`🥈 Player ${ranking[1].player} — ${ranking[1].score} pts`;
+  r3.textContent=`🥉 Player ${ranking[2].player} — ${ranking[2].score} pts`;
+
+  [r1,r2,r3].forEach(r=>r.classList.remove("show"));
+
+  setTimeout(()=>r1.classList.add("show"),300);
+  setTimeout(()=>r2.classList.add("show"),800);
+  setTimeout(()=>r3.classList.add("show"),1300);
 }
 
-function restartGame() {
-  scores = [0, 0, 0];
+function restartGame(){
+  scores=[0,0,0];
   updateScores();
-  players.forEach(p => p.classList.remove("active"));
-  currentPlayer = 0;
-  players[0].classList.add("active");
+  playersUI.forEach(p=>p.classList.remove("active"));
+  player=0;
+  playersUI[0].classList.add("active");
   winnerScreen.classList.add("hidden");
   createBoard();
 }
 
-restartBtn.addEventListener("click", restartGame);
 createBoard();
 </script>
-
 </body>
 </html>
